@@ -26,6 +26,6 @@ ret = rknn_lite.init_runtime(core_mask=RKNNLite.NPU_CORE_ALL)
 
 outputs = rknn_lite.inference(inputs=[img], data_format='nhwc')
 
-print([x for x in outputs[0][0] if x[-2] > TRASHHOLD and x[-1] in ])
+print([x for x in outputs[0][0] if x[-2] > TRASHHOLD and x[-1] in CLASS])
 
 rknn_lite.release()
