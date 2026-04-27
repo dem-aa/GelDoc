@@ -1,16 +1,19 @@
 import cv2
 import onnxruntime as ort
 import numpy as np
+from pathlib import Path
 
+from paths import PathsWire
 from cfg import YoloCfg
 
 
 class YoloDetect:
 
-    def __init__(self, cfg=None):
+    def __init__(self, onnx_model: Path, cfg=None):
+
         self.cfg = cfg or YoloCfg()
         self.session = ort.InferenceSession(
-            self.cfg.ONNX_MODEL,
+            onnx_model,
             providers=['CPUExecutionProvider']
         )
         self.input_name = self.session.get_inputs()[0].name
@@ -41,7 +44,8 @@ class YoloDetect:
             cls = int(bbox[-1])
             if cls not in dict_results:
                 dict_results[cls] = []
-            dict_results[cls].append(bbox[:-1])   # [x1, y1, x2, y2, conf]
+            x1, y1, x2, y2, conf = bbox[:-1]
+            dict_results[cls].append([int(x1), int(y1), int(x2), int(y2), float(conf)]) 
         return dict_results
 
     def _nms(self, boxes: np.ndarray):

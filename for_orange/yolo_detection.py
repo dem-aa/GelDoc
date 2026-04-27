@@ -1,19 +1,20 @@
 import cv2
 from rknnlite.api import RKNNLite
 import numpy as np
+from pathlib import Path
 
+from paths import PathsWire
 from cfg import YoloCfg
 
 
 class YoloDetect:
 
-    def __init__(self, cfg=None):
+    def __init__(self, rknn_model: Path, cfg=None):
 
         self.cfg = cfg or YoloCfg()
-        self.RKNN_MODEL = 'best_noquant.rknn'
         self.rknn_lite = RKNNLite()
 
-        ret = self.rknn_lite.load_rknn(self.cfg.RKNN_MODEL)
+        ret = self.rknn_lite.load_rknn(rknn_model)
         if ret != 0:
             raise RuntimeError(f'Load RKNN model failed: {ret}')
 
@@ -33,7 +34,7 @@ class YoloDetect:
 
         results_in_list = [x for x in results_after_nms if x[-2] > self.cfg.YOLO_CONF and x[-1] in self.cfg.CLS]
 
-        results = self.to_dict(results_in_list)
+        results = self._to_dict(results_in_list)
 
         return(results)
     
@@ -41,7 +42,7 @@ class YoloDetect:
 
         self.rknn_lite.release()
 
-    def to_dict(self, boxes: list):
+    def _to_dict(self, boxes: list):
 
         dict_results = {}
 
@@ -50,7 +51,8 @@ class YoloDetect:
             cls = int(bbox[-1])
             if cls not in dict_results:
                 dict_results[cls] = []
-            dict_results[cls].append(bbox[:-1])
+            x1, y1, x2, y2, conf = bbox[:-1]
+            dict_results[cls].append([int(x1), int(y1), int(x2), int(y2), float(conf)]) 
         
         return dict_results
 

@@ -6,63 +6,56 @@ from scipy.optimize import curve_fit
 
 from cfg import ClassicalCfg
 
-class ClassicalDetection():
+class ClassicalDetect():
 
     def __init__(self, cfg = None):
 
         self.cfg = cfg or ClassicalCfg()
 
-    def verify(self, image, grouped_data, img_number):
+    def verify(self, image: np.ndarray, results: dict):
 
         self.image = image.copy()
 
         lanes = []
         bands = []
 
-        for module in grouped_data[img_number]:
-            for key, value in module.items():
+        for key, value in results.items():
 
-                if key == 'zero':
-                    continue
+            if key == 0:
+                continue
 
-                elif key == 'line':
-                    # Проверяем, что line не None
+            elif key == 2:
+                for line_data in value:
                     if value is not None:
-                        bbox, conf = value[0], value[1]
-                        x1 = int(bbox[0])
-                        y1 = int(bbox[1])
-                        x2 = int(bbox[0] + bbox[2])
-                        y2 = int(bbox[1] + bbox[3])
+                        x1, y1, x2, y2, conf = line_data
 
                         lanes.append({
-                            "id": tuple(bbox),
+                            "id": (x1, y1, x2, y2),
                             "x1": x1,
                             "y1": y1,
                             "x2": x2,
                             "y2": y2,
-                            "conf": conf  # Добавим conf для полноты
+                            "conf": conf 
                         })
 
-                elif key == 'strips':  # Обратите внимание: 'strips' (множественное число)
-                    # Перебираем все strips
-                    for strip_data in value:
-                        bbox, conf = strip_data[0], strip_data[1]
-                        # Для strip вычисляем центр по Y
-                        strip_center_y = int(bbox[1] + bbox[3] // 2)
+            elif key == 1:
+                for strip_data in value:
+                    x1, y1, x2, y2, conf = strip_data
+                    # Для strip вычисляем центр по Y
+                    strip_center_y = int((y2 + y1) // 2)
 
-                        bands.append({
-                            "lane_id": tuple(bbox),
-                            "y": strip_center_y,
-                            "ml_conf": conf
-                        })
+                    bands.append({
+                        "strip_id": (x1, y1, x2, y2),
+                        "y": strip_center_y,
+                        "ml_conf": conf
+                    })
 
         # lanes : [{"id": int, "x1": int, "y1": int, "x2": int, "y2": int}, ...]
-        # bands : [{"lane_id": int, "y_in_lane": int}, ...]
+        # strips : [{"strip_id": int, "y_in_lane": int}, ...]
 
         by_lane = {}
 
-        for b in bands:
-            by_lane.setdefault(b["lane_id"], []).append(b)
+        by_lane = self._assign_bands_to_lanes(lanes, bands)
 
         all_results = []
 
@@ -81,7 +74,7 @@ class ClassicalDetection():
 
         x1, y1, x2, y2 = int(line["x1"]), int(line["y1"]), int(line["x2"]), int(line["y2"])
 
-        h, w = self.image.shape
+        h, w = self.image.shape[:2]
 
         strip = self.image[y1:y2, x1:x2]
         tw = strip.shape[1]
@@ -189,3 +182,15 @@ class ClassicalDetection():
 
     def _score(self, snr, r2, pos_norm):
         return 0.4 * min(1.0, snr / 10.0) + 0.4 * r2 + 0.2 * pos_norm
+    
+    def _assign_bands_to_lanes(self, lanes, bands):
+        
+        by_lane = {lane["id"]: [] for lane in lanes}
+        for band in bands:
+            bx1, by1, bx2, by2 = band["strip_id"]
+            band_cx = (bx1 + bx2) / 2        
+            for lane in lanes:
+                if lane["x1"] <= band_cx <= lane["x2"]:  
+                    by_lane[lane["id"]].append(band)
+                    break
+        return by_lane

@@ -3,6 +3,7 @@ import cv2
 from pathlib import Path
 import json
 import subprocess
+from collections import defaultdict
 
 class PreProc:
 
@@ -43,7 +44,7 @@ class PreProc:
         return rotated
     
     @staticmethod
-    def yolo_out_to_json(results: dict, json_dir: Path):
+    def to_json(results: dict, json_dir: Path):
         
         with open(json_dir, 'w', encoding='UTF-8') as file:
             json.dump(results, file, indent=2)
@@ -52,9 +53,9 @@ class PreProc:
     def make_image(results: dict, img: np.ndarray, image_path: Path):
 
         class_colors = {
-        0: (255, 0, 0),  
-        1: (0, 255, 0),   
-        2: (0, 0, 255)    
+            0: (255, 0, 0),    # Синий - zero
+            1: (0, 255, 0),    # Зеленый - strip
+            2: (0, 0, 255)     # Красный - line
         }
 
         img_with_preds = cv2.cvtColor(img.copy(), cv2.COLOR_GRAY2BGR)
@@ -73,4 +74,3 @@ class PreProc:
     def show_img(img_path: Path):
 
         subprocess.Popen(['feh', str(img_path)])
-        

@@ -8,7 +8,8 @@ class ImagePaths:
     rotated: Path       
     res: Path          
     mono: Path      
-    color: Path    
+    color: Path 
+    classical: Path   
 
 
 class PathsWire:
@@ -28,8 +29,17 @@ class PathsWire:
             rotated=self.base / 'rotated' / f'{index}Full_rotated.png',
             res=self.base / 'res' / f'{index}.json',
             mono=self.base / 'img' / f'{index}_mono.png',
-            color=self.base / 'img' / f'{index}_color.png'
+            color=self.base / 'img' / f'{index}_color.png',
+            classical=self.base / 'res' / f'{index}_classical.json'
         )
+    
+    @property
+    def onnx_model(self) -> Path:
+        return self.base / 'best.onnx'
+
+    @property
+    def rknn_model(self) -> Path:
+        return self.base / 'best_noquant.rknn'
     
     @property
     def src_dir(self) -> Path:
