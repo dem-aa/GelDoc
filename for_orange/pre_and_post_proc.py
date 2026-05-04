@@ -382,7 +382,7 @@ class PostProc:
         """Создаёт DataFrame для Decider"""
 
         def create_empty_dataframe(check=False):
-            """Слздаёт пустой DataFrame"""
+            """Создаёт пустой DataFrame"""
 
             yolo_columns = ['image_id', 'yolo_line_x', 'yolo_line_y', 'yolo_line_w', 'yolo_line_h', 'yolo_line_conf',
                             'yolo_strip_x', 'yolo_strip_y', 'yolo_strip_w', 'yolo_strip_h', 'yolo_strip_conf']
