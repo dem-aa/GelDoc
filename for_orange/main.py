@@ -5,7 +5,7 @@ from cfg import YoloCfg, ClassicalCfg
 # from yolo_detection import YoloDetect
 from yolo_detection_PC import YoloDetect
 from classical_detection import ClassicalDetect
-from pre_and_post_proc import PreProc 
+from pre_and_post_proc import PreProc, PostProc
 from paths import PathsWire
 
 # <folder>/
@@ -37,12 +37,16 @@ class ImagePipeline:
         PreProc.to_json(res, paths.res)
         PreProc.make_image(res, new_img, paths.color)
 
-        cls_res = classical_detector.detect(new_img, res, cords)   
+        new_res = PostProc.check_in_gel(new_img, res, cords)
+        new_res = PostProc.add_new_zeros_and_lines(new_img, res, cords)
+        PreProc.make_image(new_res, new_img, paths.color_new)
 
-        print(cls_res)
+        cls_res = classical_detector.detect(new_img, res, cords)   
 
         PreProc.to_json(cls_res, paths.classical)
         PreProc.make_cls_image(cls_res, new_img, paths.color_cls)
+
+        PostProc.make_final_image(res, cls_res, new_img, paths.color_dec)
         
 
 if __name__ == '__main__':

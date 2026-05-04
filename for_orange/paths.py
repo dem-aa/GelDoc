@@ -11,6 +11,8 @@ class ImagePaths:
     color: Path 
     classical: Path   
     color_cls: Path
+    color_new: Path
+    color_dec: Path
 
 
 class PathsWire:
@@ -32,13 +34,23 @@ class PathsWire:
             mono=self.base / 'img' / f'{index}_mono.png',
             color=self.base / 'img' / f'{index}_color.png',
             classical=self.base / 'res' / f'{index}_classical.json',
-            color_cls=self.base / 'img' / f'{index}_color_cls.png'
+            color_cls=self.base / 'img' / f'{index}_color_cls.png',
+            color_new=self.base / 'img' / f'{index}_color_new.png',
+            color_dec=self.base / 'img' / f'{index}_color_dec.png',
         )
     
     @property
     def onnx_model(self) -> Path:
         return self.base / 'best.onnx'
 
+    @property
+    def onnx_model_line(self) -> Path:
+        return self.base / 'best_line.onnx'
+    
+    @property
+    def onnx_model_strip(self) -> Path:
+        return self.base / 'best_strip.onnx'
+    
     @property
     def rknn_model(self) -> Path:
         return self.base / 'best_noquant.rknn'

@@ -14,10 +14,10 @@ class ClassicalDetect():
         self.cfg = cfg or ClassicalCfg()
 
     def detect(self, image: np.ndarray, results: dict, cords: tuple):
+
         self.image = image.copy()
 
-        lanes, _ = self._parse_yolo_results(results)
-        lanes = PostProc.check_in_gel(image, lanes, cords)
+        lanes, zeros = self._parse_yolo_results(results)
 
         all_results = []
         for lane in lanes:
@@ -53,11 +53,17 @@ class ClassicalDetect():
         return results
 
     def _parse_yolo_results(self, results: dict):
-        lanes, bands = [], []
+        lanes, zeros = [], []
 
         for key, value in results.items():
-            if key == 0 or value is None:
-                continue
+            if key == 0:
+                 for x1, y1, x2, y2, conf in value:
+                    lanes.append({
+                        "id": (x1, y1, x2, y2),
+                        "x1": x1, "y1": y1,
+                        "x2": x2, "y2": y2,
+                        "conf": conf,
+                    })
 
             if key == 2:
                 for x1, y1, x2, y2, conf in value:
@@ -68,7 +74,7 @@ class ClassicalDetect():
                         "conf": conf,
                     })
 
-        return lanes, bands
+        return lanes, zeros
 
     def _profile(self, line: dict):
         cfg = self.cfg

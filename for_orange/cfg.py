@@ -8,7 +8,7 @@ class YoloCfg:
     TRESHOLD: float = 0.3
     INPUT_SIZE: int = 1280
     YOLO_CONF: float = 0.01
-    YOLO_IOU: float = 0.1
+    YOLO_IOU: float = 0.01
  
 @dataclass
 class ClassicalCfg:

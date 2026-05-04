@@ -1,0 +1,278 @@
+[
+  {
+    "lane_id": [
+      793,
+      519,
+      829,
+      1021
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 908,
+    "classical_score": 1.0
+  },
+  {
+    "lane_id": [
+      754,
+      519,
+      790,
+      1008
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 762,
+    "classical_score": 0.993
+  },
+  {
+    "lane_id": [
+      754,
+      519,
+      790,
+      1008
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 874,
+    "classical_score": 0.778
+  },
+  {
+    "lane_id": [
+      754,
+      519,
+      790,
+      1008
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 908,
+    "classical_score": 0.949
+  },
+  {
+    "lane_id": [
+      676,
+      519,
+      710,
+      1013
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 761,
+    "classical_score": 0.992
+  },
+  {
+    "lane_id": [
+      676,
+      519,
+      710,
+      1013
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 912,
+    "classical_score": 0.976
+  },
+  {
+    "lane_id": [
+      597,
+      519,
+      631,
+      1039
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 912,
+    "classical_score": 0.998
+  },
+  {
+    "lane_id": [
+      597,
+      519,
+      631,
+      1039
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 989,
+    "classical_score": 0.977
+  },
+  {
+    "lane_id": [
+      597,
+      519,
+      631,
+      1039
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 1328,
+    "classical_score": 0.943
+  },
+  {
+    "lane_id": [
+      636,
+      519,
+      672,
+      1064
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 761,
+    "classical_score": 0.993
+  },
+  {
+    "lane_id": [
+      716,
+      519,
+      750,
+      1027
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 762,
+    "classical_score": 0.999
+  },
+  {
+    "lane_id": [
+      829,
+      519,
+      872,
+      1062
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 826,
+    "classical_score": 0.852
+  },
+  {
+    "lane_id": [
+      829,
+      519,
+      872,
+      1062
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 948,
+    "classical_score": 0.686
+  },
+  {
+    "lane_id": [
+      829,
+      519,
+      872,
+      1062
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 1080,
+    "classical_score": 0.958
+  },
+  {
+    "lane_id": [
+      829,
+      519,
+      872,
+      1062
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 1179,
+    "classical_score": 0.95
+  },
+  {
+    "lane_id": [
+      829,
+      519,
+      872,
+      1062
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 1256,
+    "classical_score": 0.845
+  },
+  {
+    "lane_id": [
+      829,
+      519,
+      872,
+      1062
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 1383,
+    "classical_score": 0.873
+  },
+  {
+    "lane_id": [
+      829,
+      519,
+      872,
+      1062
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 1446,
+    "classical_score": 0.73
+  },
+  {
+    "lane_id": [
+      829,
+      519,
+      872,
+      1062
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 1519,
+    "classical_score": 0.955
+  },
+  {
+    "lane_id": [
+      877,
+      519,
+      921,
+      1070
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 833,
+    "classical_score": 0.833
+  },
+  {
+    "lane_id": [
+      877,
+      519,
+      921,
+      1070
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 966,
+    "classical_score": 0.811
+  },
+  {
+    "lane_id": [
+      877,
+      519,
+      921,
+      1070
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 1183,
+    "classical_score": 0.937
+  },
+  {
+    "lane_id": [
+      877,
+      519,
+      921,
+      1070
+    ],
+    "ml_y": null,
+    "ml_conf": null,
+    "classical_y": 1465,
+    "classical_score": 0.617
+  }
+]
