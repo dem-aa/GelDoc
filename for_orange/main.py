@@ -2,7 +2,7 @@ from pathlib import Path
 import argparse
 
 from cfg import YoloCfg, ClassicalCfg
-# from yolo_detection import YoloDetect
+# from yolo_detection_orange import YoloDetect
 from yolo_detection_PC import YoloDetect
 from classical_detection import ClassicalDetect
 from pre_and_post_proc import PreProc 
@@ -38,6 +38,7 @@ class ImagePipeline:
         PreProc.make_image(res, new_img, paths.color)
 
         # cls_res = classical_detector.verify(new_img, res)
+        
         # PreProc.to_json(cls_res, paths.classical)
         # PreProc.make_image_classic(cls_res, new_img, paths.color)
 
