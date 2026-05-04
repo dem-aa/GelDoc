@@ -4,164 +4,98 @@ from scipy.signal import savgol_filter, find_peaks
 from scipy.ndimage import minimum_filter, uniform_filter
 from scipy.optimize import curve_fit
 
+from pre_and_post_proc import PostProc
 from cfg import ClassicalCfg
+
 
 class ClassicalDetect():
 
-    def __init__(self, cfg = None):
-
+    def __init__(self, cfg=None):
         self.cfg = cfg or ClassicalCfg()
 
-    def verify(self, image: np.ndarray, results: dict):
-
+    def detect(self, image: np.ndarray, results: dict, cords: tuple):
         self.image = image.copy()
 
-        lanes = []
-        bands = []
-
-        for key, value in results.items():
-
-            if key == 0:
-                continue
-
-            elif key == 2:
-                for line_data in value:
-                    if value is not None:
-                        x1, y1, x2, y2, conf = line_data
-
-                        lanes.append({
-                            "id": (x1, y1, x2, y2),
-                            "x1": x1,
-                            "y1": y1,
-                            "x2": x2,
-                            "y2": y2,
-                            "conf": conf 
-                        })
-
-            elif key == 1:
-                for strip_data in value:
-                    x1, y1, x2, y2, conf = strip_data
-                    # Для strip вычисляем центр по Y
-                    strip_center_y = int((y2 + y1) // 2)
-
-                    bands.append({
-                        "strip_id": (x1, y1, x2, y2),
-                        "y": strip_center_y,
-                        "ml_conf": conf
-                    })
-
-        # lanes : [{"id": int, "x1": int, "y1": int, "x2": int, "y2": int}, ...]
-        # strips : [{"strip_id": int, "y_in_lane": int}, ...]
-
-        by_lane = {}
-
-        by_lane = self._assign_bands_to_lanes(lanes, bands)
+        lanes, _ = self._parse_yolo_results(results)
+        lanes = PostProc.check_in_gel(image, lanes, cords)
 
         all_results = []
-
         for lane in lanes:
             signal, noise, y_off = self._profile(lane)
-            ml_pts = by_lane.get(lane["id"], [])
-            verified, missed = self._verify_lane(signal, noise, y_off,
-                                                  ml_pts, lane["id"])
-            all_results.extend(verified + missed)
+            bands = self._detect_bands(signal, noise, y_off, lane["id"])
+            all_results.extend(bands)
 
         return all_results
 
-    def _profile(self, line: dict):
-
+    def _detect_bands(self, signal, noise, y_off, lane_id):
         cfg = self.cfg
 
-        x1, y1, x2, y2 = int(line["x1"]), int(line["y1"]), int(line["x2"]), int(line["y2"])
+        peaks, _ = find_peaks(
+            signal,
+            prominence=noise * 8.0,
+            height=noise * cfg.SNR_MIN,
+            distance=10,
+        )
 
+        results = []
+        for p in peaks:
+            snr   = float(signal[p] / noise)
+            r2    = self._fit_r2(signal, p)
+            score = self._score(snr, r2, 1.0)
+            results.append({
+                "lane_id"        : lane_id,
+                "ml_y"           : None,
+                "ml_conf"        : None,
+                "classical_y"    : int(p + y_off),
+                "classical_score": round(float(score), 3),
+            })
+
+        return results
+
+    def _parse_yolo_results(self, results: dict):
+        lanes, bands = [], []
+
+        for key, value in results.items():
+            if key == 0 or value is None:
+                continue
+
+            if key == 2:
+                for x1, y1, x2, y2, conf in value:
+                    lanes.append({
+                        "id": (x1, y1, x2, y2),
+                        "x1": x1, "y1": y1,
+                        "x2": x2, "y2": y2,
+                        "conf": conf,
+                    })
+
+        return lanes, bands
+
+    def _profile(self, line: dict):
+        cfg = self.cfg
         h, w = self.image.shape[:2]
+        sx, sy = w / 1280, h / 1280
+
+        x1 = int(line["x1"] * sx)
+        y1 = int(line["y1"] * sy)
+        x2 = int(line["x2"] * sx)
+        y2 = int(line["y2"] * sy)
 
         strip = self.image[y1:y2, x1:x2]
-        tw = strip.shape[1]
-        th = strip.shape[0]
+        raw   = strip.mean(axis=1).astype(float)
 
-        strip = cv2.createCLAHE(cfg.CLAHE_CLIP, (th, tw)).apply(strip)
+        if len(raw) < cfg.SG_WINDOW:
+            return np.zeros(1), 1.0, y1
 
-        raw = strip.mean(axis=1).astype(float)
-
-        sg = savgol_filter(raw, cfg.SG_WINDOW, cfg.SG_POLYORDER)
-
-        bg = uniform_filter(minimum_filter(sg, cfg.RB_RADIUS), cfg.RB_RADIUS)
+        sg     = savgol_filter(raw, cfg.SG_WINDOW, cfg.SG_POLYORDER)
+        bg     = uniform_filter(minimum_filter(sg, cfg.RB_RADIUS), cfg.RB_RADIUS)
         signal = np.clip(sg - bg, 0, None)
 
-        noise = max(0.5, np.median(np.abs(np.diff(signal))) / 0.6745)
+        mad   = np.median(np.abs(np.diff(signal))) / 0.6745
+        noise = max(mad, signal.max() * 0.01)
 
         return signal, noise, y1
 
-
-    def _verify_lane(self, signal, noise, y_off, ml_points, lane_id):
-
-        cfg = self.cfg
-
-        N = len(signal)
-
-        cls_peaks, _ = find_peaks(
-            signal,
-            prominence = noise * 2.5,
-            height     = noise * cfg.SNR_MIN,
-            distance   = 8,
-        )
-
-        used = set()
-        results = []
-
-        for pt in sorted(ml_points, key=lambda p: p["y"]):
-            y_rel = min(N - 1, int(pt["y"]) - y_off)
-
-            cands = [p for p in cls_peaks if abs(p - y_rel) <= cfg.SHIFT_TOL and p not in used]
-
-            if cands:
-                best = min(cands, key=lambda p: abs(p - y_rel))
-                used.add(best)
-                delta = abs(best - y_rel)
-                snr = float(signal[best] / noise)
-                r2 = self._fit_r2(signal, best)
-                pos_n = max(0.0, 1.0 - delta / cfg.SHIFT_TOL)
-
-            else:
-                best   = y_rel
-                delta  = 0
-                snr    = float(signal[y_rel] / noise)
-                r2     = self._fit_r2(signal, y_rel)
-                pos_n  = 0.0
-
-            cls_s = self._score(snr, r2, pos_n)
-            joint = cfg.ALPHA * pt["ml_conf"] + (1 - cfg.ALPHA) * cls_s
-
-            results.append({
-                "lane_id"        : lane_id,
-                "ml_y"           : int(pt["y"]),
-                "ml_conf"        : pt["ml_conf"],
-                "classical_y"    : int(best + y_off),
-                "classical_score": round(float(cls_s), 3),
-            })
-
-        missed = []
-
-        for p in cls_peaks:
-            if p in used:
-                continue
-            snr   = float(signal[p] / noise)
-            r2    = self._fit_r2(signal, p)
-            cls_s = self._score(snr, r2, 1.0)
-            missed.append({
-                "lane_id"        : lane_id,
-                "ml_y"           : np.nan,
-                "ml_conf"        : np.nan,
-                "classical_y"    : int(p + y_off),
-                "classical_score": round(float(cls_s), 3),
-            })
-
-        return results, missed
-
-
     def _fit_r2(self, signal, center, window=15):
-
         lo, hi = max(0, center - window), min(len(signal), center + window)
         if hi - lo < 4:
             return 0.0
@@ -174,7 +108,7 @@ class ClassicalDetect():
                 bounds=([0, lo, 0.5], [np.inf, hi, 40.0]),
                 maxfev=3000,
             )
-            yf = popt[0] * np.exp(-((x - popt[1]) ** 2) / (2 * popt[2] ** 2))
+            yf     = popt[0] * np.exp(-((x - popt[1]) ** 2) / (2 * popt[2] ** 2))
             ss_tot = np.sum((y - y.mean()) ** 2)
             return float(max(0.0, 1 - np.sum((y - yf) ** 2) / ss_tot)) if ss_tot > 0 else 0.0
         except Exception:
@@ -182,15 +116,3 @@ class ClassicalDetect():
 
     def _score(self, snr, r2, pos_norm):
         return 0.4 * min(1.0, snr / 10.0) + 0.4 * r2 + 0.2 * pos_norm
-    
-    def _assign_bands_to_lanes(self, lanes, bands):
-        
-        by_lane = {lane["id"]: [] for lane in lanes}
-        for band in bands:
-            bx1, by1, bx2, by2 = band["strip_id"]
-            band_cx = (bx1 + bx2) / 2        
-            for lane in lanes:
-                if lane["x1"] <= band_cx <= lane["x2"]:  
-                    by_lane[lane["id"]].append(band)
-                    break
-        return by_lane

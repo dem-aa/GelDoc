@@ -10,6 +10,7 @@ class ImagePaths:
     mono: Path      
     color: Path 
     classical: Path   
+    color_cls: Path
 
 
 class PathsWire:
@@ -30,7 +31,8 @@ class PathsWire:
             res=self.base / 'res' / f'{index}.json',
             mono=self.base / 'img' / f'{index}_mono.png',
             color=self.base / 'img' / f'{index}_color.png',
-            classical=self.base / 'res' / f'{index}_classical.json'
+            classical=self.base / 'res' / f'{index}_classical.json',
+            color_cls=self.base / 'img' / f'{index}_color_cls.png'
         )
     
     @property

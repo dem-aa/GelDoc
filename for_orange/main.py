@@ -30,16 +30,20 @@ class ImagePipeline:
         classical_detector = ClassicalDetect()
 
         img = PreProc.load_img(paths.src) 
-        new_img = PreProc.rotate_image(img, paths.rotated)
+        new_img, cords = PreProc.rotate_and_crop_image(img, paths.rotated)
 
         res = yolo_detector.detect(new_img)
 
         PreProc.to_json(res, paths.res)
         PreProc.make_image(res, new_img, paths.color)
 
-        # cls_res = classical_detector.verify(new_img, res)
-        # PreProc.to_json(cls_res, paths.classical)
-        # PreProc.make_image_classic(cls_res, new_img, paths.color)
+        cls_res = classical_detector.detect(new_img, res, cords)   
+
+        print(cls_res)
+
+        PreProc.to_json(cls_res, paths.classical)
+        PreProc.make_cls_image(cls_res, new_img, paths.color_cls)
+        
 
 if __name__ == '__main__':
 
